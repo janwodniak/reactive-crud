@@ -10,14 +10,14 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestReactiveCrudApplication {
 
+    public static void main(String[] args) {
+        SpringApplication.from(ReactiveCrudApplication::main).with(TestReactiveCrudApplication.class).run(args);
+    }
+
     @Bean
     @ServiceConnection
     PostgreSQLContainer<?> postgresContainer() {
         return new PostgreSQLContainer<>(DockerImageName.parse("postgres:latest"));
-    }
-
-    public static void main(String[] args) {
-        SpringApplication.from(ReactiveCrudApplication::main).with(TestReactiveCrudApplication.class).run(args);
     }
 
 }
