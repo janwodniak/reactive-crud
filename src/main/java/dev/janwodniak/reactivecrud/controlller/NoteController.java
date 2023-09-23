@@ -7,6 +7,7 @@ import dev.janwodniak.reactivecrud.model.note.command.EditNoteCommand;
 import dev.janwodniak.reactivecrud.model.note.command.EditNotePartiallyCommand;
 import dev.janwodniak.reactivecrud.model.note.dto.NoteDto;
 import dev.janwodniak.reactivecrud.service.ReactiveNoteService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -40,7 +41,7 @@ public class NoteController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    Mono<ResponseEntity<Page<NoteDto>>> searchNotes(@RequestParam Optional<String> title, CreateNotePageCommand command) {
+    Mono<ResponseEntity<Page<NoteDto>>> searchNotes(@RequestParam Optional<String> title, @Valid CreateNotePageCommand command) {
         return noteService.searchNotes(title.orElse(""), toPageable(command))
                 .map(this::toDtoPage)
                 .map(ResponseEntity::ok);
@@ -54,7 +55,7 @@ public class NoteController {
     }
 
     @PostMapping
-    Mono<ResponseEntity<NoteDto>> createNote(@RequestBody CreateNoteCommand command) {
+    Mono<ResponseEntity<NoteDto>> createNote(@RequestBody @Valid CreateNoteCommand command) {
         return noteService.createNote(toEntity(command))
                 .map(this::toDto)
                 .map(noteDto -> status(CREATED).body(noteDto));
@@ -67,14 +68,14 @@ public class NoteController {
     }
 
     @PutMapping("{id}")
-    Mono<ResponseEntity<NoteDto>> editNote(@PathVariable Long id, @RequestBody EditNoteCommand command) {
+    Mono<ResponseEntity<NoteDto>> editNote(@PathVariable Long id, @RequestBody @Valid EditNoteCommand command) {
         return noteService.editNote(id, command)
                 .map(this::toDto)
                 .map(ResponseEntity::ok);
     }
 
     @PatchMapping("{id}")
-    Mono<ResponseEntity<NoteDto>> editNotePartially(@PathVariable Long id, @RequestBody EditNotePartiallyCommand command) {
+    Mono<ResponseEntity<NoteDto>> editNotePartially(@PathVariable Long id, @RequestBody @Valid EditNotePartiallyCommand command) {
         return noteService.editNotePartially(id, command)
                 .map(this::toDto)
                 .map(ResponseEntity::ok);
