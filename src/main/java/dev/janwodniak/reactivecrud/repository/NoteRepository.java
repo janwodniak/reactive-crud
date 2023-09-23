@@ -1,6 +1,6 @@
 package dev.janwodniak.reactivecrud.repository;
 
-import dev.janwodniak.reactivecrud.model.Note;
+import dev.janwodniak.reactivecrud.model.note.Note;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;

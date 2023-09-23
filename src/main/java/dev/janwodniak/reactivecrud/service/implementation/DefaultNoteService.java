@@ -1,9 +1,9 @@
 package dev.janwodniak.reactivecrud.service.implementation;
 
 import dev.janwodniak.reactivecrud.exception.custom.NoteNotFoundException;
-import dev.janwodniak.reactivecrud.model.Note;
-import dev.janwodniak.reactivecrud.model.command.EditNoteCommand;
-import dev.janwodniak.reactivecrud.model.command.EditNotePartiallyCommand;
+import dev.janwodniak.reactivecrud.model.note.Note;
+import dev.janwodniak.reactivecrud.model.note.command.EditNoteCommand;
+import dev.janwodniak.reactivecrud.model.note.command.EditNotePartiallyCommand;
 import dev.janwodniak.reactivecrud.repository.NoteRepository;
 import dev.janwodniak.reactivecrud.service.ReactiveNoteService;
 import lombok.RequiredArgsConstructor;

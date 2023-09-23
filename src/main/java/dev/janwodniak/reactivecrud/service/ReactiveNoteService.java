@@ -1,8 +1,8 @@
 package dev.janwodniak.reactivecrud.service;
 
-import dev.janwodniak.reactivecrud.model.Note;
-import dev.janwodniak.reactivecrud.model.command.EditNoteCommand;
-import dev.janwodniak.reactivecrud.model.command.EditNotePartiallyCommand;
+import dev.janwodniak.reactivecrud.model.note.Note;
+import dev.janwodniak.reactivecrud.model.note.command.EditNoteCommand;
+import dev.janwodniak.reactivecrud.model.note.command.EditNotePartiallyCommand;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;

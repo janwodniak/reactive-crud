@@ -1,4 +1,4 @@
-package dev.janwodniak.reactivecrud.model;
+package dev.janwodniak.reactivecrud.model.note;
 
 import lombok.Builder;
 import org.springframework.data.annotation.Id;

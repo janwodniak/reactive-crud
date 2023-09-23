@@ -1,4 +1,4 @@
-package dev.janwodniak.reactivecrud.model.command;
+package dev.janwodniak.reactivecrud.model.note.command;
 
 public record EditNoteCommand(
         String title,
