@@ -41,6 +41,10 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.testcontainers:r2dbc'
+    testImplementation 'org.testingisdocumenting.webtau:webtau-junit5:2.2'
+    testImplementation 'org.testingisdocumenting.webtau:webtau-http:2.2'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
