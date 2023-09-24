@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testingisdocumenting.webtau.data.table.TableData;
 import org.testingisdocumenting.webtau.http.request.HttpQueryParams;
+import org.testingisdocumenting.webtau.http.request.HttpRequestBody;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -33,6 +34,15 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
                 .expectedOutput(output)
                 .build();
     }
+
+    private static TestCase<HttpRequestBody, TableData> createTestCase(String testName, HttpRequestBody input, TableData output) {
+        return TestCase.<HttpRequestBody, TableData>builder()
+                .testName(testName)
+                .input(input)
+                .expectedOutput(output)
+                .build();
+    }
+
 
     @Nested
     class ShouldSearchNotes {
@@ -343,6 +353,124 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
             http.get(NOTES_URL + "/" + expectedId, (header, body) -> {
                 header.statusCode.should(equal(200));
                 body.should(equal(expectedResponse));
+            });
+        }
+
+    }
+
+    @Nested
+    class ShouldNotCreateNote {
+
+        private static final String TITLE_TOO_LONG = "TITLE_TOO_LONG";
+        private static final String TITLE_REQUIRED = "TITLE_REQUIRED";
+        private static final String TITLE_INVALID_FORMAT = "TITLE_INVALID_FORMAT";
+        private static final String CONTENT_REQUIRED = "CONTENT_REQUIRED";
+        private static final String CONTENT_INVALID_FORMAT = "CONTENT_INVALID_FORMAT";
+
+        private static Stream<Arguments> provideInvalidNoteData() {
+            return Stream.of(
+                    createTestCase(
+                            "Special character content",
+                            http.json(
+                                    "title", "ValidTitle",
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Null title and null content",
+                            http.json(
+                                    "title", null,
+                                    "content", null
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_REQUIRED,
+                                    "content", CONTENT_REQUIRED
+                            )
+                    ),
+                    createTestCase(
+                            "Null title",
+                            http.json(
+                                    "title", null,
+                                    "content", "Valid Content"),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_REQUIRED
+                            )
+                    ),
+                    createTestCase(
+                            "Null content",
+                            http.json(
+                                    "title", "ValidTitle",
+                                    "content", null
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "content", CONTENT_REQUIRED
+                            )
+                    ),
+                    createTestCase(
+                            "Too long title and character content",
+                            http.json(
+                                    "title", "A".repeat(256),
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_TOO_LONG,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Empty title",
+                            http.json(
+                                    "title", "",
+                                    "content", "Valid content"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Null content and special character title",
+                            http.json(
+                                    "title", "A.",
+                                    "content", null
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_INVALID_FORMAT,
+                                    "content", CONTENT_REQUIRED
+                            )
+                    )
+            ).map(Arguments::of);
+        }
+
+        @DisplayName("Should not create note with invalid data")
+        @ParameterizedTest(name = "{index} {0}")
+        @MethodSource("provideInvalidNoteData")
+        void shouldNotCreateNoteWithInvalidData(TestCase<HttpRequestBody, TableData> testCase) {
+            // given
+            var requestBody = testCase.input();
+            var tableData = testCase.expectedOutput();
+
+            // when
+            // then
+            http.post(NOTES_URL, requestBody, (header, body) -> {
+                header.statusCode.should(equal(400));
+                body.should(containAll(tableData));
             });
         }
 
