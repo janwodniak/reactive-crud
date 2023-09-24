@@ -476,4 +476,57 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldDeleteNote {
+
+        private static final String NOTE_WITH_ID_NOT_FOUND = "NOTE_WITH_ID_%d_NOT_FOUND";
+
+        void ensureNoteExists(Long id) {
+            var expectedResponse = http.json(
+                    "id", id,
+                    "title", "AA",
+                    "content", "Content for note AA",
+                    "date", "2022-09-23 08:00:00"
+            );
+
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+        @DisplayName("Should delete note")
+        @Test
+        void shouldDeleteNote() {
+            // given
+            var noteId = 1L;
+
+            // when
+            ensureNoteExists(noteId);
+
+            http.delete(NOTES_URL + "/" + noteId, (header, body) -> {
+                header.statusCode.should(equal(204));
+            });
+
+            // then
+            assertNoteNotFound(noteId);
+        }
+
+        private void assertNoteNotFound(Long id) {
+            var expectedNotFoundResponse = http.json(
+                    "timestamp", "2023-09-21 21:45:00",
+                    "httpStatusCode", 404,
+                    "httpStatus", "NOT_FOUND",
+                    "reason", "Not Found",
+                    "message", String.format(NOTE_WITH_ID_NOT_FOUND, id)
+            );
+
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(404));
+                body.should(equal(expectedNotFoundResponse));
+            });
+        }
+
+    }
+
 }
