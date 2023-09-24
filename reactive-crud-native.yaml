@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  app:
+    image: janwodniak/reactive-crud-native:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - app-network
+    depends_on:
+      - postgresql
+
+  postgresql:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: notes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge
