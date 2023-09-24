@@ -2,9 +2,11 @@ package dev.janwodniak.reactivecrud.exception.custom;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.FieldError;
+import org.testingisdocumenting.webtau.junit5.WebTau;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@WebTau
 class ValidationErrorDtoTest {
 
     @Test

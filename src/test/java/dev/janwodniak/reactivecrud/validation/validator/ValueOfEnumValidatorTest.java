@@ -9,12 +9,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.testingisdocumenting.webtau.junit5.WebTau;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@WebTau
 @ExtendWith(MockitoExtension.class)
 class ValueOfEnumValidatorTest {
 
