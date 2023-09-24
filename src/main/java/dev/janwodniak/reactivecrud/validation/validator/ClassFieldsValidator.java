@@ -9,11 +9,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
 
 @Component
 @RequiredArgsConstructor
@@ -22,18 +21,11 @@ public class ClassFieldsValidator implements ConstraintValidator<ClassFields, St
 
     private Pattern fieldsPattern;
 
-    private static String getStringPattern(String[] excludedFields, Class<?> fieldsSource) {
-        return stream(fieldsSource.getDeclaredFields())
-                .map(Field::getName)
-                .filter(fieldName -> !asList(excludedFields).contains(fieldName))
-                .collect(Collectors.joining("|"));
-    }
-
     @Override
     public void initialize(ClassFields constraintAnnotation) {
-        String[] excludedFields = constraintAnnotation.excludedFieldsNames();
-        Class<?> fieldsSource = constraintAnnotation.fieldsSource();
-        this.fieldsPattern = Pattern.compile(getStringPattern(excludedFields, fieldsSource));
+        var excludedFields = Set.of(constraintAnnotation.excludedFieldsNames());
+        var fieldsSource = constraintAnnotation.fieldsSource();
+        this.fieldsPattern = Pattern.compile(constructPatternFromFields(excludedFields, fieldsSource));
     }
 
     @Override
@@ -41,4 +33,10 @@ public class ClassFieldsValidator implements ConstraintValidator<ClassFields, St
         return fieldsPattern.matcher(sortByValue).matches();
     }
 
+    private String constructPatternFromFields(Set<String> excludedFields, Class<?> fieldsSource) {
+        return Arrays.stream(fieldsSource.getDeclaredFields())
+                .map(Field::getName)
+                .filter(fieldName -> !excludedFields.contains(fieldName))
+                .collect(Collectors.joining("|"));
+    }
 }
