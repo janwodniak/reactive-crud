@@ -669,4 +669,182 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldNotEditNote {
+
+        private static final String TITLE_TOO_LONG = "TITLE_TOO_LONG";
+        private static final String TITLE_REQUIRED = "TITLE_REQUIRED";
+        private static final String TITLE_INVALID_FORMAT = "TITLE_INVALID_FORMAT";
+        private static final String CONTENT_REQUIRED = "CONTENT_REQUIRED";
+        private static final String CONTENT_INVALID_FORMAT = "CONTENT_INVALID_FORMAT";
+
+        static Stream<Arguments> provideInvalidEditNoteData() {
+            return Stream.of(
+                    createTestCase(
+                            "Special character content",
+                            http.json(
+                                    "title", "AA",
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Invalid title and content",
+                            http.json(
+                                    "title", "A".repeat(256),
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_TOO_LONG,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Null title",
+                            http.json(
+                                    "title", null,
+                                    "content", "Valid Content"
+                            ),
+                            table("field", "message",
+                                    ________________________________,
+                                    "title", TITLE_REQUIRED)
+                    ),
+                    createTestCase(
+                            "Empty title",
+                            http.json(
+                                    "title", "",
+                                    "content", "Valid Content"
+                            ),
+                            table("field", "message",
+                                    ________________________________,
+                                    "title", TITLE_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Null content and special character title",
+                            http.json(
+                                    "title", "A.",
+                                    "content", null
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_INVALID_FORMAT,
+                                    "content", CONTENT_REQUIRED
+                            )
+                    ),
+                    createTestCase(
+                            "Long title and special character content",
+                            http.json(
+                                    "title", "A".repeat(256),
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_TOO_LONG,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Null title and null content",
+                            http.json(
+                                    "title", null
+                                    , "content", null
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_REQUIRED,
+                                    "content", CONTENT_REQUIRED
+                            )
+                    )
+            ).map(Arguments::of);
+        }
+
+        @MethodSource("provideInvalidEditNoteData")
+        @ParameterizedTest(name = "{index} {0}")
+        void shouldNotEditNoteWithInvalidData(TestCase<HttpRequestBody, TableData> testCase) {
+            // given
+            var id = 1L;
+
+            // when
+            assertNoteState(id, initialNoteState(id));
+            attemptNoteEdit(id, testCase.input(), testCase.expectedOutput());
+
+            // then
+            assertNoteState(id, initialNoteState(id));
+        }
+
+        private HttpRequestBody initialNoteState(Long id) {
+            return http.json(
+                    "id", id,
+                    "title", "AA",
+                    "content", "Content for note AA",
+                    "date", "2022-09-23 08:00:00"
+            );
+        }
+
+        private void assertNoteState(Long id, HttpRequestBody expectedState) {
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedState));
+            });
+        }
+
+        private void attemptNoteEdit(Long id, HttpRequestBody editRequest, TableData expectedErrors) {
+            http.put(NOTES_URL + "/" + id, editRequest, (header, body) -> {
+                header.statusCode.should(equal(400));
+                body.should(containAll(expectedErrors));
+            });
+        }
+
+        @Test
+        void shouldNotEditNoteIfDoesNotExist() {
+            // given
+            var nonExistingId = 9999L;
+            var requestBody = http.json(
+                    "title", "NewTitle",
+                    "content", "New content"
+            );
+
+            // when
+            assertNoteNotFound(nonExistingId);
+
+            // then
+            attemptEditAndAssertNotFound(nonExistingId, requestBody);
+        }
+
+        private void assertNoteNotFound(Long id) {
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(404));
+                body.should(equal(noteNotFoundResponse(id)));
+            });
+        }
+
+        private void attemptEditAndAssertNotFound(Long id, HttpRequestBody editRequest) {
+            http.put(NOTES_URL + "/" + id, editRequest, (header, body) -> {
+                header.statusCode.should(equal(404));
+                body.should(equal(noteNotFoundResponse(id)));
+            });
+        }
+
+        private HttpRequestBody noteNotFoundResponse(Long id) {
+            return http.json(
+                    "timestamp", "2023-09-21 21:45:00",
+                    "httpStatusCode", 404,
+                    "httpStatus", "NOT_FOUND",
+                    "reason", "Not Found",
+                    "message", String.format("NOTE_WITH_ID_%d_NOT_FOUND", id)
+            );
+        }
+
+    }
+
 }
