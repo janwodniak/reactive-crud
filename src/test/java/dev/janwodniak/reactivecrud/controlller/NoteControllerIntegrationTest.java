@@ -3,6 +3,7 @@ package dev.janwodniak.reactivecrud.controlller;
 import dev.janwodniak.reactivecrud.test.TestCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -261,5 +262,29 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldGetNoteById {
+
+        @DisplayName("Should get note by ID")
+        @Test
+        void shouldGetNoteById() {
+            // given
+            var id = 1L;
+            var expectedResponse = http.json(
+                    "id", id,
+                    "title", "AA",
+                    "content", "Content for note AA",
+                    "date", "2022-09-23 08:00:00"
+            );
+
+            // when
+            // then
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+    }
 
 }
