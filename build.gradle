@@ -19,11 +19,16 @@ configurations {
 }
 
 bootBuildImage {
-    builder = "paketobuildpacks/builder:tiny"
+//        builder = "paketobuildpacks/builder:tiny"
+//        imageName = 'janwodniak/reactive-crud-native-amd64:latest'
+
+    builder = 'dashaun/java-native-builder-arm64'
+    imageName = 'janwodniak/reactive-crud-native-arm64:latest'
+
     environment = [
             "BP_NATIVE_IMAGE": "true",
     ]
-    imageName = 'janwodniak/reactive-crud-native:latest'
+
 }
 
 bootJar {

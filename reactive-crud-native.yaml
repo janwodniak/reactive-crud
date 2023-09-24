@@ -1,7 +1,8 @@
 version: '3.8'
 services:
   app:
-    image: janwodniak/reactive-crud-native:latest
+    image: janwodniak/reactive-crud-native-amd64:latest
+    #    image: janwodniak/reactive-crud-native-arm64:latest
     ports:
       - "8080:8080"
     environment:
@@ -17,13 +18,9 @@ services:
       POSTGRES_DB: notes
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     networks:
       - app-network
 
-volumes:
-  pgdata:
 
 networks:
   app-network:
