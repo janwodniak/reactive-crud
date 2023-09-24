@@ -287,4 +287,30 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldNotGetNoteById {
+
+        @DisplayName("Should not get note by ID if does not exist")
+        @Test
+        void shouldNotGetNoteById() {
+            // given
+            var nonExistingId = 9999L;
+            var expectedResponse = http.json(
+                    "timestamp", "2023-09-21 21:45:00",
+                    "httpStatusCode", 404,
+                    "httpStatus", "NOT_FOUND",
+                    "reason", "Not Found",
+                    "message", "NOTE_WITH_ID_9999_NOT_FOUND"
+            );
+
+            // when
+            // then
+            http.get(NOTES_URL + "/" + nonExistingId, (header, body) -> {
+                header.statusCode.should(equal(404));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+    }
+
 }
