@@ -12,7 +12,11 @@ import org.testingisdocumenting.webtau.http.request.HttpQueryParams;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.testingisdocumenting.webtau.Matchers.containAll;
 import static org.testingisdocumenting.webtau.Matchers.equal;
+import static org.testingisdocumenting.webtau.WebTauCore.________________________________;
+import static org.testingisdocumenting.webtau.WebTauCore._____________________________________;
+import static org.testingisdocumenting.webtau.WebTauCore._______________________________________;
 import static org.testingisdocumenting.webtau.WebTauCore._______________________________________________________;
 import static org.testingisdocumenting.webtau.WebTauCore.table;
 import static org.testingisdocumenting.webtau.http.Http.http;
@@ -21,16 +25,16 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     private final static String NOTES_URL = "api/v1/notes";
 
+    private static TestCase<HttpQueryParams, TableData> createTestCase(String testName, HttpQueryParams input, TableData output) {
+        return TestCase.<HttpQueryParams, TableData>builder()
+                .testName(testName)
+                .input(input)
+                .expectedOutput(output)
+                .build();
+    }
+
     @Nested
     class ShouldSearchNotes {
-
-        private static TestCase<HttpQueryParams, TableData> createTestCase(String testName, HttpQueryParams input, TableData output) {
-            return TestCase.<HttpQueryParams, TableData>builder()
-                    .testName(testName)
-                    .input(input)
-                    .expectedOutput(output)
-                    .build();
-        }
 
         private static Stream<Arguments> provideSearchParameters() {
             return Stream.of(
@@ -164,5 +168,98 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
         }
 
     }
+
+    @Nested
+    class ShouldNotSearchNotes {
+
+        private static final String PAGE_NOT_NEGATIVE = "PAGE_NOT_NEGATIVE";
+        private static final String PAGE_SIZE_NOT_LESS_THAN_ONE = "PAGE_SIZE_NOT_LESS_THAN_ONE";
+        private static final String INVALID_SORT_DIRECTION = "INVALID_SORT_DIRECTION";
+        private static final String INVALID_SORT_BY_VALUE_FIELD = "INVALID_SORT_BY_VALUE_FIELD";
+
+        private static Stream<Arguments> provideInvalidSearchParameters() {
+            return Stream.of(
+                    createTestCase(
+                            "Negative page number",
+                            http.query("pageNumber", "-1"),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "pageNumber", PAGE_NOT_NEGATIVE
+                            )),
+                    createTestCase(
+                            "Zero page size",
+                            http.query("pageSize", "0"),
+                            table(
+                                    "field", "message",
+                                    _______________________________________,
+                                    "pageSize", PAGE_SIZE_NOT_LESS_THAN_ONE
+                            )),
+                    createTestCase(
+                            "Invalid sort direction",
+                            http.query("sortDirection", "INVALID"),
+                            table(
+                                    "field", "message",
+                                    _______________________________________,
+                                    "sortDirection", INVALID_SORT_DIRECTION
+                            )),
+                    createTestCase(
+                            "Invalid sort by field",
+                            http.query("sortBy", "unknownField"),
+                            table(
+                                    "field", "message",
+                                    _____________________________________,
+                                    "sortBy", INVALID_SORT_BY_VALUE_FIELD
+                            )),
+                    createTestCase(
+                            "Negative page number with zero page size",
+                            http.query("pageNumber", "-1", "pageSize", "0"),
+                            table(
+                                    "field", "message",
+                                    _______________________________________,
+                                    "pageNumber", PAGE_NOT_NEGATIVE,
+                                    "pageSize", PAGE_SIZE_NOT_LESS_THAN_ONE
+                            )),
+                    createTestCase(
+                            "Invalid sort direction with invalid sort by field",
+                            http.query("sortDirection", "INVALID", "sortBy", "unknownField"),
+                            table(
+                                    "field", "message",
+                                    _______________________________________,
+                                    "sortDirection", INVALID_SORT_DIRECTION,
+                                    "sortBy", INVALID_SORT_BY_VALUE_FIELD
+                            )),
+                    createTestCase(
+                            "All params invalid",
+                            http.query("pageNumber", "-1", "pageSize", "0", "sortDirection", "INVALID", "sortBy", "unknownField"),
+                            table(
+                                    "field", "message",
+                                    _______________________________________,
+                                    "pageNumber", PAGE_NOT_NEGATIVE,
+                                    "pageSize", PAGE_SIZE_NOT_LESS_THAN_ONE,
+                                    "sortDirection", INVALID_SORT_DIRECTION,
+                                    "sortBy", INVALID_SORT_BY_VALUE_FIELD
+                            ))
+            ).map(Arguments::of);
+        }
+
+        @DisplayName("Should not search notes")
+        @ParameterizedTest(name = "{index} {0}")
+        @MethodSource("provideInvalidSearchParameters")
+        void shouldNotSearchNotesWithInvalidParams(TestCase<HttpQueryParams, TableData> testCase) {
+            // given
+            var queryParams = testCase.input();
+            var tableData = testCase.expectedOutput();
+
+            // when
+            // then
+            http.get(NOTES_URL, queryParams, (header, body) -> {
+                header.statusCode.should(equal(400));
+                body.should(containAll(tableData));
+            });
+        }
+
+    }
+
 
 }
