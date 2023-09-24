@@ -43,6 +43,14 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
                 .build();
     }
 
+    private static TestCase<HttpRequestBody, HttpRequestBody> createTestCase(String testName, HttpRequestBody input, HttpRequestBody output) {
+        return TestCase.<HttpRequestBody, HttpRequestBody>builder()
+                .testName(testName)
+                .input(input)
+                .expectedOutput(output)
+                .build();
+    }
+
 
     @Nested
     class ShouldSearchNotes {
@@ -569,5 +577,96 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldEditNote {
+
+        private static final String EDITION_DATE_FORMAT = "2023-09-21 21:45:00";
+
+        static Stream<Arguments> provideEditNoteData() {
+            return Stream.of(
+                    createTestCase(
+                            "Edit title",
+                            http.json(
+                                    "title", "NewTitle",
+                                    "content", "Content for note AA"
+                            ),
+                            http.json(
+                                    "id", 1,
+                                    "title", "NewTitle",
+                                    "content", "Content for note AA",
+                                    "date", EDITION_DATE_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Edit content",
+                            http.json(
+                                    "title", "AA",
+                                    "content", "New content"
+                            ),
+                            http.json(
+                                    "id", 1,
+                                    "title", "AA",
+                                    "content", "New content",
+                                    "date", EDITION_DATE_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Edit title and content",
+                            http.json(
+                                    "title", "NewTitle",
+                                    "content", "New content"
+                            ),
+                            http.json(
+                                    "id", 1,
+                                    "title", "NewTitle",
+                                    "content", "New content",
+                                    "date", EDITION_DATE_FORMAT
+                            )
+                    )
+            ).map(Arguments::of);
+        }
+
+        @MethodSource("provideEditNoteData")
+        @ParameterizedTest(name = "{index} {0}")
+        void shouldEditNote(TestCase<HttpRequestBody, HttpRequestBody> testCase) {
+            // given
+            var id = 1L;
+            verifyInitialNoteState(id);
+
+            // when
+            modifyNoteAndAssert(id, testCase.input(), testCase.expectedOutput());
+
+            // then
+            verifyModifiedNoteState(id, testCase.expectedOutput());
+        }
+
+        private void verifyInitialNoteState(Long id) {
+            var initialNote = http.json(
+                    "id", id,
+                    "title", "AA",
+                    "content", "Content for note AA",
+                    "date", "2022-09-23 08:00:00"
+            );
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(initialNote));
+            });
+        }
+
+        private void modifyNoteAndAssert(Long id, HttpRequestBody requestBody, HttpRequestBody expectedResponse) {
+            http.put(NOTES_URL + "/" + id, requestBody, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+        private void verifyModifiedNoteState(Long id, HttpRequestBody expectedResponse) {
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+    }
 
 }
