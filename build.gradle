@@ -18,6 +18,22 @@ configurations {
     }
 }
 
+bootBuildImage {
+    builder = "paketobuildpacks/builder:tiny"
+    environment = [
+            "BP_NATIVE_IMAGE": "true",
+    ]
+    imageName = 'janwodniak/reactive-crud-native:latest'
+}
+
+bootJar {
+    mainClass = "dev.janwodniak.reactivecrud.ReactiveCrudApplication"
+}
+
+graalvmNative {
+    testSupport = false
+}
+
 repositories {
     mavenCentral()
 }
