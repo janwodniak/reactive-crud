@@ -847,4 +847,89 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldEditNotePartially {
+
+        private static final Long TEST_NOTE_ID = 1L;
+        private static final String INITIAL_DATE_FORMAT = "2022-09-23 08:00:00";
+        private static final String EDITION_DATE_FORMAT = "2023-09-21 21:45:00";
+
+        static Stream<Arguments> provideEditNotePartiallyData() {
+            return Stream.of(
+                    createTestCase(
+                            "Edit title",
+                            http.json(
+                                    "title", "NewTitle"
+                            ),
+                            http.json(
+                                    "id", TEST_NOTE_ID,
+                                    "title", "NewTitle",
+                                    "content", "Content for note AA",
+                                    "date", EDITION_DATE_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Edit content",
+                            http.json(
+                                    "content", "New content"
+                            ),
+                            http.json(
+                                    "id", TEST_NOTE_ID,
+                                    "title", "AA", "content",
+                                    "New content", "date", EDITION_DATE_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Edit title and content",
+                            http.json(
+                                    "title", "NewTitle",
+                                    "content", "New content"
+                            ),
+                            http.json(
+                                    "id", TEST_NOTE_ID,
+                                    "title", "NewTitle",
+                                    "content", "New content",
+                                    "date", EDITION_DATE_FORMAT
+                            )
+                    )
+            ).map(Arguments::of);
+        }
+
+        @MethodSource("provideEditNotePartiallyData")
+        @ParameterizedTest(name = "{index} {0}")
+        void shouldEditNotePartially(TestCase<HttpRequestBody, HttpRequestBody> testCase) {
+            // given
+            // when
+            verifyNoteState(initialNoteState());
+            editNoteAndAssert(testCase.input(), testCase.expectedOutput());
+
+            // then
+            verifyNoteState(testCase.expectedOutput());
+        }
+
+        private HttpRequestBody initialNoteState() {
+            return http.json(
+                    "id", TEST_NOTE_ID,
+                    "title", "AA",
+                    "content", "Content for note AA",
+                    "date", INITIAL_DATE_FORMAT
+            );
+        }
+
+        private void verifyNoteState(HttpRequestBody expectedState) {
+            http.get(NOTES_URL + "/" + TEST_NOTE_ID, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedState));
+            });
+        }
+
+        private void editNoteAndAssert(HttpRequestBody editRequest, HttpRequestBody expectedResponse) {
+            http.patch(NOTES_URL + "/" + TEST_NOTE_ID, editRequest, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+    }
+
 }
