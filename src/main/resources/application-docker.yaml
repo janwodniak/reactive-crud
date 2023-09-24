@@ -17,4 +17,4 @@ spring:
 
 data:
   initializer:
-    enabled: false
+    enabled: true
