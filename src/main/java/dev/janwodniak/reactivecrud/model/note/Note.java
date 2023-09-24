@@ -18,6 +18,6 @@ public record Note(
         @LastModifiedDate
         LocalDateTime date,
         @Version
-        long version
+        Long version
 ) {
 }

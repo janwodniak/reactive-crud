@@ -14,3 +14,7 @@ spring:
   sql:
     init:
       mode: never
+
+data:
+  initializer:
+    enabled: false
