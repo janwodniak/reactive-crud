@@ -932,4 +932,159 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldNotEditNotePartially {
+
+        private static final Long TEST_NOTE_ID = 1L;
+        private static final String INITIAL_DATE_FORMAT = "2022-09-23 08:00:00";
+        private static final String NOTE_NOT_FOUND_MSG = "NOTE_WITH_ID_%d_NOT_FOUND";
+        private static final String TITLE_TOO_LONG = "TITLE_TOO_LONG";
+        private static final String TITLE_INVALID_FORMAT = "TITLE_INVALID_FORMAT";
+        private static final String CONTENT_INVALID_FORMAT = "CONTENT_INVALID_FORMAT";
+
+        static Stream<Arguments> provideInvalidEditNotePartiallyData() {
+            return Stream.of(
+                    createTestCase(
+                            "Special character content",
+                            http.json(
+                                    "title", "AA",
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Invalid title and content",
+                            http.json(
+                                    "title", "A".repeat(256),
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_TOO_LONG,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Empty title",
+                            http.json(
+                                    "title", "",
+                                    "content", "Valid Content"
+                            ),
+                            table("field", "message",
+                                    ________________________________,
+                                    "title", TITLE_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Special character title",
+                            http.json(
+                                    "title", "A."
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_INVALID_FORMAT
+                            )
+                    ),
+                    createTestCase(
+                            "Long title and special character content",
+                            http.json(
+                                    "title", "A".repeat(256),
+                                    "content", "A.*"
+                            ),
+                            table(
+                                    "field", "message",
+                                    ________________________________,
+                                    "title", TITLE_TOO_LONG,
+                                    "content", CONTENT_INVALID_FORMAT
+                            )
+                    )
+            ).map(Arguments::of);
+        }
+
+        @MethodSource("provideInvalidEditNotePartiallyData")
+        @ParameterizedTest(name = "{index} {0}")
+        void shouldNotEditNotePartiallyWithInvalidData(TestCase<HttpRequestBody, TableData> testCase) {
+            // given
+            var requestBody = testCase.input();
+            var tableData = testCase.expectedOutput();
+
+            // when
+            verifyNoteState(initialNoteState());
+            attemptNoteEditWithExpectedErrors(requestBody, tableData);
+
+            // then
+            verifyNoteState(initialNoteState());
+        }
+
+        @Test
+        void shouldNotEditNotePartiallyIfDoesNotExist() {
+            // given
+            var nonExistingId = 9999L;
+            var requestBody = http.json(
+                    "title", "NewTitle",
+                    "content", "New content"
+            );
+
+            // when
+            assertNoteNotFound(nonExistingId);
+
+            // then
+            attemptEditAndAssertNotFound(nonExistingId, requestBody);
+        }
+
+        private void assertNoteNotFound(Long id) {
+            http.get(NOTES_URL + "/" + id, (header, body) -> {
+                header.statusCode.should(equal(404));
+                body.should(equal(noteNotFoundResponse(id)));
+            });
+        }
+
+        private HttpRequestBody noteNotFoundResponse(Long id) {
+            return http.json(
+                    "timestamp", "2023-09-21 21:45:00",
+                    "httpStatusCode", 404,
+                    "httpStatus", "NOT_FOUND",
+                    "reason", "Not Found",
+                    "message", String.format(NOTE_NOT_FOUND_MSG, id)
+            );
+        }
+
+        private HttpRequestBody initialNoteState() {
+            return http.json(
+                    "id", TEST_NOTE_ID,
+                    "title", "AA",
+                    "content", "Content for note AA",
+                    "date", INITIAL_DATE_FORMAT
+            );
+        }
+
+        private void verifyNoteState(HttpRequestBody expectedState) {
+            http.get(NOTES_URL + "/" + TEST_NOTE_ID, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedState));
+            });
+        }
+
+        private void attemptNoteEditWithExpectedErrors(HttpRequestBody editRequest, TableData expectedResponse) {
+            http.patch(NOTES_URL + "/" + TEST_NOTE_ID, editRequest, (header, body) -> {
+                header.statusCode.should(equal(400));
+                body.should(containAll(expectedResponse));
+            });
+        }
+
+        private void attemptEditAndAssertNotFound(Long id, HttpRequestBody editRequest) {
+            http.put(NOTES_URL + "/" + id, editRequest, (header, body) -> {
+                header.statusCode.should(equal(404));
+                body.should(equal(noteNotFoundResponse(id)));
+            });
+        }
+
+    }
+
 }
