@@ -313,4 +313,39 @@ public class NoteControllerIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Nested
+    class ShouldCreateNote {
+
+        @DisplayName("Should create note")
+        @Test
+        void shouldCreateNote() {
+            // given
+            var input = http.json(
+                    "title", "TestNote",
+                    "content", "Test note content"
+            );
+
+            var expectedId = 2705L;
+            var expectedResponse = http.json(
+                    "id", expectedId,
+                    "title", "TestNote",
+                    "content", "Test note content",
+                    "date", "2023-09-21 21:45:00"
+            );
+
+            // when
+            // then
+            http.post(NOTES_URL, input, (header, body) -> {
+                header.statusCode.should(equal(201));
+                body.should(equal(expectedResponse));
+            });
+
+            http.get(NOTES_URL + "/" + expectedId, (header, body) -> {
+                header.statusCode.should(equal(200));
+                body.should(equal(expectedResponse));
+            });
+        }
+
+    }
+
 }
