@@ -1,0 +1,54 @@
+### GET a list of notes (with optional title filter)
+GET http://localhost:8080/api/v1/notes
+Accept: application/json
+
+###
+
+### GET a list of notes with pagination and sorting
+GET http://localhost:8080/api/v1/notes?pageNumber=0&pageSize=5&sortDirection=DESC&sortBy=id
+Accept: application/json
+
+###
+
+### GET a note by ID (replace {id} with an actual ID)
+GET http://localhost:8080/api/v1/notes/{id}
+Accept: application/json
+
+###
+
+### POST to create a new note
+POST http://localhost:8080/api/v1/notes
+Content-Type: application/json
+
+{
+  "title": "SampleTitle",
+  "content": "Sample content"
+}
+
+<> 2023-09-25T001942.201.json
+
+###
+
+### DELETE a note by ID (replace {id} with an actual ID)
+DELETE http://localhost:8080/api/v1/notes/{id}
+
+###
+
+### PUT to edit a note by ID (replace {id} with an actual ID and adjust the content)
+PUT http://localhost:8080/api/v1/notes/{id}
+Content-Type: application/json
+
+{
+  "title": "UpdatedTitle",
+  "content": "Updated content with numbers 456"
+}
+
+###
+
+### PATCH to edit a note partially by ID (replace {id} with an actual ID and adjust the content)
+PATCH http://localhost:8080/api/v1/notes/{id}
+Content-Type: application/json
+
+{
+  "title": "PartiallyUpdated"
+}
