@@ -18,6 +18,27 @@ configurations {
     }
 }
 
+bootBuildImage {
+//        builder = "paketobuildpacks/builder:tiny"
+//        imageName = 'janwodniak/reactive-crud-native-amd64:latest'
+
+    builder = 'dashaun/java-native-builder-arm64'
+    imageName = 'janwodniak/reactive-crud-native-arm64:latest'
+
+    environment = [
+            "BP_NATIVE_IMAGE": "true",
+    ]
+
+}
+
+bootJar {
+    mainClass = "dev.janwodniak.reactivecrud.ReactiveCrudApplication"
+}
+
+graalvmNative {
+    testSupport = false
+}
+
 repositories {
     mavenCentral()
 }
@@ -28,6 +49,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.liquibase:liquibase-core'
     implementation 'org.springframework:spring-jdbc'
+    implementation 'org.modelmapper:modelmapper:3.1.1'
+    implementation 'org.apache.commons:commons-lang3'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
@@ -40,6 +63,10 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.testcontainers:r2dbc'
+    testImplementation 'org.testingisdocumenting.webtau:webtau-junit5:2.2'
+    testImplementation 'org.testingisdocumenting.webtau:webtau-http:2.2'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
